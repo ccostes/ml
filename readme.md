@@ -9,15 +9,11 @@ Publishable content for each subdirectory is stored in a `public` folder which i
 to enable publishing without rebuilding the source notebooks.
 
 ## Building
-1. Install python deps
+Install python deps in a virtual environment:
 ```
 python -m vevnv env
 source env/bin/activate
 pip install -r requirements.txt
 ```
-2. Build notebooks, eg. for am_explainer
-```
-cd am_explainer
-jupytext --to notebook --execute am.py
-jupyter nbconvert --to markdown --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags=hide-input --output-dir='./public' am.ipynb
-```
+
+To build the markdown files to publish on the blog, use jupytext eg.: `jupytext --to markdown am.py --output ./public/index.md`
