@@ -4,6 +4,7 @@
 # title: "ML In Practice Part 1: AM Radio"
 # maintitle: "ML In Practice"
 # subtitle: "Part 1: AM Radio"
+# repo: https://github.com/ccostes/ml/tree/main/am_explainer
 # jupyter:
 #   jupytext:
 #     text_representation:
