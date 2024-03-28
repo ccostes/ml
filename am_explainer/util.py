@@ -2,12 +2,15 @@ import os
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import wave
 
 plt.rcParams.update({
     'font.size': 22,  # Adjust font size here
     'font.family': 'serif',
     'font.serif': ['Palatino', 'Georgia'],  # This list is in order of preference
+    'text.color': 'white',
+    'figure.facecolor': '1e293b',
     'figure.labelsize': 22,  # Adjust axis label size if different from general font size
     'axes.titlesize': 24,
     'axes.labelsize': 22,  # Adjust axis label size if different from general font size
@@ -39,18 +42,60 @@ def save_audio(filename, audio_data, sample_rate):
 def plot_waveform(signal, sample_rate, title='Signal Waveform', filename=None):
     time_axis = np.arange(len(signal)) / sample_rate
     plt.figure(figsize=(16, 8))
-    plt.plot(time_axis, signal)
+    plt.plot(time_axis, signal, color="#6cbdf2")
     plt.title(title)
     plt.xlabel('Time (s)')
     plt.ylabel('Amplitude')
     plt.grid(True)
-    plt.gca().set_facecolor('none')
     if filename:
         save_fig(filename)  # Save the plot to the file
         plt.close()  # Close the figure to prevent it from being displayed in this case
     else:
         plt.show()  # Display the plot
-    
+
+def animate_waveform(start, end, sample_rate, title=None, ylim=None, filename="animaion.mp4"):
+    # Animate a waveform plot, linearly transitioning from start to end
+    fig, ax = plt.subplots(figsize=(16, 8), facecolor='#1e293b')
+    if title is not None:
+        plt.title(title)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    ax.grid(True)
+    # ax.axis('off')
+    ax.set_xticks([], [])
+    time_axis = np.arange(len(start)) / sample_rate
+    ax.set_xlim(time_axis[0], time_axis[-1])
+    line, = ax.plot([], [], color="#6cbdf2")
+    fps = 60
+    num_steps = fps * 6
+
+    def animate(i):
+        # Visual transition from start to end and back
+        if i < num_steps // 2:
+            transition_phase = i / (num_steps / 2)
+        else:
+            transition_phase = 1 - ((i - num_steps / 2) / (num_steps / 2))
+        waveform = start * (1 - transition_phase) + end * transition_phase
+        line.set_data(time_axis, waveform.real)
+        return line,
+
+    def init():
+        line.set_data([], [])
+        return line,
+    plt.tight_layout()
+    plt.gca().spines['bottom'].set_color('white')
+    plt.gca().spines['top'].set_color('white') 
+    plt.gca().spines['right'].set_color('white')
+    plt.gca().spines['left'].set_color('white')
+    plt.gca().tick_params(axis='x', colors='white', labelcolor='white')
+    plt.gca().tick_params(axis='y', colors='white', labelcolor='white')
+    plt.gca().xaxis.label.set_color('white')
+    plt.gca().yaxis.label.set_color('white')
+    plt.gca().title.set_color('white')
+    plt.gca().set_facecolor('none')
+    anim = FuncAnimation(fig, animate, frames=num_steps, init_func=init, blit=True)
+    anim.save(os.path.join(outdir, filename), dpi=150, fps=fps)
+
 def plot_waterfall_spectrum(signal, sample_rate, window_size=1024, hop_size=512, title='Waterfall Spectrum', include_negative_frequencies=True, filename=None):
     """
     Plots a waterfall spectrum of a signal. Optionally includes negative frequencies.
@@ -81,7 +126,7 @@ def plot_waterfall_spectrum(signal, sample_rate, window_size=1024, hop_size=512,
         fft = np.fft.fft(segment, window_size)
         if include_negative_frequencies:
             fft_shifted = np.fft.fftshift(fft)
-            waterfall[:, i] = 20 * np.log10(np.abs(fft_shifted))
+            waterfall[:, i] = 20 * np.log10(np.abs(fft_shifted) + 1e-9)
             freqs = np.fft.fftshift(np.fft.fftfreq(window_size, 1 / sample_rate))
         else:
             # Use only the first half of FFT results for positive frequencies
@@ -107,6 +152,16 @@ def plot_waterfall_spectrum(signal, sample_rate, window_size=1024, hop_size=512,
 def save_fig(filename, colorbar=None, colorbar_mappable=None):
     """Save two versions of the figure for light and dark mode"""
     plt.tight_layout()  # Adjust layout to make room for elements
+    plt.gca().spines['bottom'].set_color('black')
+    plt.gca().spines['top'].set_color('black') 
+    plt.gca().spines['right'].set_color('black')
+    plt.gca().spines['left'].set_color('black')
+    plt.gca().tick_params(axis='x', colors='black', labelcolor='black')
+    plt.gca().tick_params(axis='y', colors='black', labelcolor='black')
+    plt.gca().xaxis.label.set_color('black')
+    plt.gca().yaxis.label.set_color('black')
+    plt.gca().title.set_color('black')
+    plt.gca().set_facecolor('none')
     plt.savefig(os.path.join(outdir, filename), transparent=True)  # Save light mode
     # Config for Dark Mode
     plt.gca().spines['bottom'].set_color('white')
@@ -130,4 +185,4 @@ def save_fig(filename, colorbar=None, colorbar_mappable=None):
     import pathlib
     dark_filename = f"{os.path.splitext(filename)[0]}_dark{os.path.splitext(filename)[1]}"
     plt.savefig(os.path.join(outdir, dark_filename), facecolor='none', transparent=True)
-    
+

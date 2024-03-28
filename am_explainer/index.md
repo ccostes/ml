@@ -2,6 +2,8 @@
 date: 2024-03-26
 draft: false
 title: "ML In Practice Part 1: AM Radio"
+maintitle: "ML In Practice"
+subtitle: "Part 1: AM Radio"
 jupyter:
   jupytext:
     text_representation:
@@ -10,19 +12,19 @@ jupyter:
       format_version: '1.3'
       jupytext_version: 1.16.1
   kernelspec:
-    display_name: gpu11
+    display_name: Python 3
     language: python
     name: python3
 ---
 Would you guess that it's possible to build a program that turns AM radio into audio and reduces noise, without actually knowing how radio or noise reduction works? It turns out you can; I know because I did it! (you can probably guess how based on the title)
 
-Okay I lied a bit, I do know a thing or two about radio, but the results still impressed me! You can see that the audio (lower half of the plot below) is much stronger (brighter) and more distinct in the model output, and can hear the difference below.
-![Noise Comparison](comparison.png)
+Okay I lied a bit: I do know a thing or two about radio, but the results still impressed me! You can see that the audio (lower half of the plot below) is much stronger (brighter) and more distinct in the model output, and can hear the difference below.
+![Noise Comparison](static/comparison.png)
 <!--more-->
 **Standard Processing:**
-<audio controls src="0dB_standard.wav"></audio>
+<audio controls src="static/0dB_standard.wav"></audio>
 **Model Output:**
-<audio controls src="0dB_model.wav"></audio>
+<audio controls src="static/0dB_model.wav"></audio>
 In this series of articles, I'll take you through the process of how I achieved these results, from understanding the fundamentals of AM radio to designing and training a machine learning model.
 
 Part one (you are here) is a quick primer on AM radio and how these signals are traditionally processed. In the next part, we will design a model architecture and generate synthetic training data. Finally, the third installment will cover model training and analyze how the results change depending on our choices.
@@ -35,7 +37,7 @@ Not legal advice. Check with your doctor if machine learning is right for you.
 
 
 
-## AM Demodulation Primer
+## AM Radio Primer
 > *If you don't understand the problem you're trying to apply machine learning to, you're gonna have a bad time.*
 
 Amplitude Modulation (AM) is the simplest way to transmit audio signals via radio. You might wonder why we don't just transmit the audio signals directly, but this is undesirable for a variety of reasons (your antenna would need to hundreds of kilometers long, for one). Higher frequencies are generally easier to transmit, so the next simplest thing is to combine the audio signal with a higher frequency sine wave "carrier", transmit that signal, and then remove the carrier on the receiving end.
@@ -45,7 +47,7 @@ modulated = ((1 + audio) * carrier)
 ```
 The animation below shows what this looks like as the carrier frequency increases from zero, but actual signals will use a much higher carrier frequency (aircraft radio is around 120 MHz).
 <video controls="" autoplay="" loop="">
-    <source src="am.mp4" type="video/mp4">
+    <source src="static/am.mp4" type="video/mp4">
 </video>
 
 
@@ -54,12 +56,12 @@ An important detail is how we will receive the signals we wish to process. Tradi
 
 SDR receivers capture a "window" of frequencies, and we can tune this window so that it includes the frequency we are interested in. This also means that we can receive multiple signals simultaneously if they fall within that window, e.g. simultaneously listening to multiple radio stations; neat!
 
-## AM Demodulation Process
+## AM Demodulation
 Now that you understand what an AM signal is and how we are receiving it, lets look at each step of the process to turn a raw SDR signal containing an AM signal into audio.
 
 ### Input signal
 We will start by taking a look at our input signal using what's called a spectrogram. This shows the magnitude of a signal at various frequencies on the vertical axis, over time on the horizontal axis. Note that these frequencies are relative to where the receiver was tuned, e.g. tuned to 500 kHz, a 300 kHz signal would show up on the plot at -200 kHz.
-The code below reads recorded SDR data, stored as pairs of bytes representing a complex signal, and plots the spectrogram. Complex values aren't as scary as they sound, and for our purposes all you really need to know is that it is a two-dimensional signal where the first is referred to as `I` (or *real*), and the second is `Q` (or *imaginary*).
+The code below reads recorded SDR data, stored as pairs of bytes representing a complex signal, and plots the spectrogram. Complex values aren't as scary as they sound, and in this context all it means is that our input is a two-dimensional signal which includes magnitude (referred to as `I`, or *real*) and phase (or `Q`, a.k.a. *imaginary*) information.
 
 ```python
 sr_in = 1.04e6  # SDR sampling rate
@@ -78,12 +80,12 @@ i_samples = iq_samples[0::2]
 q_samples = iq_samples[1::2]
 complex_samples = i_samples + 1j * q_samples
 
-from util import save_audio, plot_waveform, plot_waterfall_spectrum, set_outdir
-set_outdir('public')
-plot_waterfall_spectrum(complex_samples, sr_in, title="SDR Signal", filename='sdr_data.png')
+from util import save_audio, plot_waveform, plot_waterfall_spectrum, animate_waveform, set_outdir
+set_outdir('gen')
+plot_waterfall_spectrum(complex_samples.real, sr_in, title="SDR Signal", filename='sdr_data.png')
 ```
 
-![SDR Signal](sdr_data.png)
+![SDR Signal](gen/sdr_data.png)
 You can see in the spectrogram that we captured a few different signals, shown by the bright horizontal lines. The signal we want to demodulate is at 120.9 MHz, which shows here as the continuous line just below 200 kHz since the receiver was tuned to 121.16 MHz.
 
 ### Shift to Baseband
@@ -98,13 +100,13 @@ shifted_complex = complex_samples * pattern_repeated
 plot_waterfall_spectrum(shifted_complex, sr_in, title="Baseband Signal", filename='baseband.png')
 ```
 
-![Baseband Signal](baseband.png)
+![Baseband Signal](gen/baseband.png)
 ### Downsample
 Looking at the spectrogram after shifting the input so that our AM signal is at baseband, the audio portion we are interested in (~300 Hz to 3 kHz) represents a tiny portion of the over one-million-Hz frequency range in the data. We can get rid of all that extra information with what's called *downsampling*. 
 Fundamentally, lower-frequency signals can be represented by fewer data points per second, called the *sampling rate*. This concept is illustrated in the animation below, showing two signals sampled at increasing rates, with a reconstructed signal based on the sampled points. You can see that the low frequency signal is approximated with much lower sampling rate than the high frequency signal.
 
 <video controls="" autoplay="" loop="">
-    <source src="sampling.mp4" type="video/mp4">
+    <source src="static/sampling.mp4" type="video/mp4">
 </video>
 
 The corollary to this is that the *maximum* frequency a given sample rate can represent is twice the sampling rate (see [Nyquist-Shannon Theorem](https://en.m.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem) for details). Any signals outside that range will be "folded back" into the range, called *aliasing*. You can see this effect on the high-frequency signal in the animation as lower-frequency sine waves that appear at various sampling rates.
@@ -129,7 +131,7 @@ filtered = modulation.fir_low_pass_filter(
 plot_waterfall_spectrum(filtered, sr_in, title="Anti-alias Filtered", filename='baseband_filtered.png')
 ```
 
-![Anti-Alias-Filtered Baseband](baseband_filtered.png)
+![Anti-Alias-Filtered Baseband](gen/baseband_filtered.png)
 You can see that the filtering has removed all of the other signals from our data, leaving a thin bright line in the middle that contains our audio.
 This filtered signal can now be downsampled by simply picking out samples at the new rate and throwing the rest away. E.g. if the original sampling rate were 1 kHz and our desired rate was 100 Hz we would save every 10th sample.
 
@@ -137,45 +139,52 @@ This filtered signal can now be downsampled by simply picking out samples at the
 # Decimate to desired sample rate
 decimation_factor = int(sr_in // sr_aud)
 decimated = filtered[::decimation_factor]
-save_audio('decimated.wav', decimated, sr_aud)
+save_audio('decimated.wav', decimated.real, sr_aud)
 plot_waterfall_spectrum(decimated, sr_aud, include_negative_frequencies=False, title="Decimated", filename='decimated.png')
 ```
 
-![Decimated Signal](decimated.png)
-The spectrogram of the decimated signal shows the new frequency range of up to about 4 kHz, and you can see the audio data.
-### Rectify and filter
-With just these two steps we are actually quite close to the desired audio, which you can start to hear at this stage, but there's clearly something wrong. Look at the previous spectrogram and see if you can guess what the issue is.
+![Decimated Signal](gen/decimated.png)
+The spectrogram of the decimated signal shows the new frequency range of up to about 4 kHz, and you can also see the audio data. With just these two steps we are actually quite close to the desired audio, as you can start to hear below, but there's clearly something wrong.
 <audio controls src="decimated.wav"></audio>
+You might be able to guess what the problem is from the spectrogram of the decimated signal, but recall that AM signal is comprised on a carrier wave modulated by the audio signal. That carrier wave is still present, visible as the bright continuous line around 200 Hz on the spectrogram, which is why the audio sounds distorted.
 
-You can see that the carrier signal is still present as the bright continuous line near the bottom of the spectrogram; not quite at 0 Hz. The reason it is not at exactly 0 Hz is because to the SDR hardware used here isn't super-precise and has some tuning inaccuracy (which can even change over time due to things like temperature). Thus the original spectrogram wasn't tuned quite to where we thought, and the shift didn't bring the AM signal to exactly 0 Hz.
-
-Luckily this is relatively easy to fix by applying another filter, this time a band-pass which only allows frequencies within a given band to pass, which we set to the audio frequency range of 300 Hz to 3 kHz.
-
+### Demodulation
+In order to recover the original audio signal we need to remove the carrier wave. The details of how this works are outside the scope of this article (recall the original premise was that you *didn't* need to know how to do it), but the gist is that because our signal is complex, with magnitude and phase dimensions, we can extract the audio modulation signal by simply taking the magnitude of the signal.
 ```python
-# Demodulate: Rectify and filter
+demodulated = torch.abs(decimated)
+animate_waveform(decimated.real, demodulated.real, sr_aud, "Demodulation", ylim=[-1,1.5], filename="demodulation.mp4")
+```
+```python
+
+```
+
+The effect of this is apparent if we look at the signal waveform before and after the `torch.abs` operation, where the "thickness" of the decimated signal is caused by the presence of the carrier.
+<video controls="" autoplay="" loop="">
+    <source src="static/demodulation.mp4" type="video/mp4">
+</video>
+
+Finally, there could be some non-audio signals left-over, so we apply a final bandpass filter to remove anything outside the audio frequency range of 300 Hz to 3 kHz.
+```python
 low_cut_freq = 300
 high_cut_freq = 3000
-rectified = torch.abs(decimated)
-save_audio('demodulated.wav', rectified, sr_aud)
 fir_kernel = modulation.design_band_pass_filter(
     low_cut_freq, high_cut_freq, sr_aud, kernel_size=101
 )
-demodulated = modulation.fir_low_pass_filter(
-    rectified.unsqueeze(0).unsqueeze(0),
+filtered = modulation.fir_low_pass_filter(
+    demodulated.unsqueeze(0).unsqueeze(0),
     fir_kernel.unsqueeze(0).unsqueeze(0),
     padding="same",
 )
-save_audio('demodulated.wav', demodulated, sr_aud)
-plot_waveform(demodulated, sr_aud, title="Demodulated Audio", filename='demodulated_waveform.png')
-plot_waterfall_spectrum(demodulated, sr_aud, include_negative_frequencies=False, title="Demodulated Audio", filename='demodulated_waterfall.png')
+save_audio('demodulated.wav', filtered, sr_aud)
+plot_waveform(filtered, sr_aud, title="Demodulated Audio", filename='demodulated_waveform.png')
+plot_waterfall_spectrum(filtered, sr_aud, include_negative_frequencies=False, title="Demodulated Audio", filename='demodulated_waterfall.png')
 ```
 
-![Demodulated Signal Spectrum](demodulated_waterfall.png)
+![Demodulated Signal Spectrum](gen/demodulated_waterfall.png)
 The carrier signal is gone, and playing the signal as audio, you can hear that we have successfully demodulated the AM signal!
 
-<audio controls src="rectified.wav"></audio>
-<audio controls src="demodulated.wav"></audio>
-![Demodulated Signal Waveform](demodulated_waveform.png)
+<audio controls src="gen/demodulated.wav"></audio>
+![Demodulated Signal Waveform](gen/demodulated_waveform.png)
 You've now seen all of the steps required to demodulate an AM radio signal, and hopefully have an intuition for what is happening in each.
 
 The next installment will introduce machine learning, designing a model architecture for this problem, and devising a plan for creating synthetic training data. Stay tuned!

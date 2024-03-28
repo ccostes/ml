@@ -16,4 +16,4 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-To build the markdown files to publish on the blog, use jupytext eg.: `jupytext --to markdown am.py --output ./public/index.md`
+To build the markdown files to publish on the blog, use jupytext eg.: `jupytext --execute --to markdown am.py --output ./index.md`

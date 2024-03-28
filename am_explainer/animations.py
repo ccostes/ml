@@ -93,7 +93,7 @@ def sampling(out_path):
 
 def am(out_path):
     # Load sample audio
-    audio, sr_aud = librosa.load('public/example.wav', sr=None)
+    audio, sr_aud = librosa.load('static/example.wav', sr=None)
     # Amplitude-Modulation animation
     fig, ax = plt.subplots(figsize=(8,4))
     ax.set_ylim([-1, 3])
@@ -103,7 +103,7 @@ def am(out_path):
     time_axis = np.arange(len(audio)) / sr_aud
     ax.set_xlim(time_axis[0], time_axis[-1])
     # Generate a non-linear array of steps
-    fps = 120
+    fps = 60
     num_steps = fps * 3
     carrier_freq = (1 / (1 + np.exp(-0.8*np.linspace(-6, 6, num_steps)))) * np.pi / 2  # logistic funciton
     carrier_freq = np.append(carrier_freq, carrier_freq[::-1]) # reverse back to 0
@@ -124,6 +124,6 @@ def am(out_path):
     anim.save(out_path, dpi=150, fps=fps)
 
 print('Generating sampling.mp4...')
-sampling('public/sampling.mp4')
-# print('Generating am.mp4...')
-# am('public/am.mp4')
+sampling('static/sampling.mp4')
+print('Generating am.mp4...')
+am('static/am.mp4')
