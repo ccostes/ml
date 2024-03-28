@@ -38,7 +38,7 @@ def save_audio(filename, audio_data, sample_rate):
 
 def plot_waveform(signal, sample_rate, title='Signal Waveform', filename=None):
     time_axis = np.arange(len(signal)) / sample_rate
-    plt.figure(figsize=(12, 4))
+    plt.figure(figsize=(16, 8))
     plt.plot(time_axis, signal)
     plt.title(title)
     plt.xlabel('Time (s)')
@@ -88,7 +88,7 @@ def plot_waterfall_spectrum(signal, sample_rate, window_size=1024, hop_size=512,
             waterfall[:, i] = 20 * np.log10(np.abs(fft[:window_size // 2]))
             freqs = np.fft.fftfreq(window_size, 1 / sample_rate)[:window_size // 2]
 
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(16, 8))
     if include_negative_frequencies:
         extent = (segment_times[0], segment_times[-1], freqs[0], freqs[-1])
     else:

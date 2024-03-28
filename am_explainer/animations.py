@@ -3,6 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+plt.rcParams.update({
+    'font.family': 'serif',
+    'font.serif': ['Palatino', 'Georgia'],  # This list is in order of preference
+    'text.color': 'white',
+    'figure.facecolor': '1e293b',
+})
+
 def sampling(out_path):
     # Basic parameters
     fs_low = 2  # Low frequency signal frequency in Hz
@@ -33,20 +40,19 @@ def sampling(out_path):
     # Plot
     fig, axs = plt.subplots(2, 1, figsize=(8, 8))
     plt.ylim = ([-1,1])
+    axs[0].set_title(f'Sample Rate: {sample_rate:.1f} Hz', fontsize=24)
+    axs[0].axis('off')
+    axs[1].axis('off')
 
     # Low frequency signal plot
-    axs[0].plot(t, signal_low, label='Actual Signal', alpha=0.5)
-    axs[0].plot(sample_points_low, sampled_signal_low, 'o', label='Sampled Points')
-    axs[0].plot(t, interp_low, '--', label='Interpolated Signal')
-    axs[0].set_title('Low Frequency Signal')
-    axs[0].legend()
+    axs[0].plot(t, signal_low, '#6cbdf2', linewidth=3, alpha=0.5)
+    axs[0].plot(t, interp_low, '--', color='#dd8453', linewidth=2)
+    axs[0].plot(sample_points_low, sampled_signal_low, 'o', color='#ff8e08', markersize=8)
 
     # High frequency signal plot
-    axs[1].plot(t, signal_high, label='Actual Signal', alpha=0.5)
-    axs[1].plot(sample_points_high, sampled_signal_high, 'o', label='Sampled Points')
-    axs[1].plot(t, interp_high, '--', label='Interpolated Signal')
-    axs[1].set_title('High Frequency Signal')
-    axs[1].legend()
+    axs[1].plot(t, signal_high, '#6cbdf2', linewidth=3, alpha=0.5)
+    axs[1].plot(t, interp_high, '--', color='#dd8453', linewidth=2)
+    axs[1].plot(sample_points_high, sampled_signal_high, 'o', color='#ff8e08', markersize=8)
 
     plt.tight_layout()
     # plt.show()
@@ -68,22 +74,18 @@ def sampling(out_path):
         interp_high = np.interp(t, sample_points_high, sampled_signal_high, left=sampled_signal_low[0], right=sampled_signal_low[-1])
 
         # Plot low frequency signal and its approximation
-        axs[0].plot(t, signal_low, label='Actual Signal', alpha=0.5)
-        axs[0].plot(sample_points_low, sampled_signal_low, 'o', label='Sampled Points')
-        axs[0].plot(t, interp_low, '--', label='Interpolated Signal')
-        axs[0].set_title(f'Sample Rate: {sample_rate:.1f} Hz')
-        axs[0].legend(loc='upper right')
-        axs[0].set_ylim(-1, 1)
+        axs[0].plot(t, signal_low, '#6cbdf2', linewidth=3, alpha=0.5)
+        axs[0].plot(t, interp_low, '--', color='#dd8453', linewidth=2)
+        axs[0].plot(sample_points_low, sampled_signal_low, 'o', color='#ff8e08', markersize=8)
 
         # Plot high frequency signal and its approximation
-        axs[1].plot(t, signal_high, label='Actual Signal', alpha=0.5)
-        axs[1].plot(sample_points_high, sampled_signal_high, 'o', label='Sampled Points')
-        axs[1].plot(t, interp_high, '--', label='Interpolated Signal')
-        axs[1].legend(loc='upper right')
-        axs[1].set_ylim(-1, 1)
+        axs[1].plot(t, signal_high, '#6cbdf2', linewidth=3, alpha=0.5)
+        axs[1].plot(t, interp_high, '--', color='#dd8453', linewidth=2)
+        axs[1].plot(sample_points_high, sampled_signal_high, 'o', color='#ff8e08', markersize=8)
 
-        # Adjust layout
-        plt.tight_layout()
+        axs[0].set_title(f'Sample Rate: {sample_rate:.1f} Hz', fontsize=24)
+        axs[0].axis('off')
+        axs[1].axis('off')
 
     # Create the animation
     ani = FuncAnimation(fig, update, frames=np.arange(1, 1500), interval=14)
@@ -91,13 +93,13 @@ def sampling(out_path):
 
 def am(out_path):
     # Load sample audio
-    audio, sr_aud = librosa.load('example.wav', sr=None)
+    audio, sr_aud = librosa.load('public/example.wav', sr=None)
     # Amplitude-Modulation animation
     fig, ax = plt.subplots(figsize=(8,4))
-    ax.set(xlabel='Time (s)', ylabel='Amplitude')
     ax.set_ylim([-1, 3])
     ax.grid(True)
-    line, = ax.plot([], [], color="tab:blue")
+    ax.axis('off')
+    line, = ax.plot([], [], color="#6cbdf2")
     time_axis = np.arange(len(audio)) / sr_aud
     ax.set_xlim(time_axis[0], time_axis[-1])
     # Generate a non-linear array of steps
@@ -117,10 +119,11 @@ def am(out_path):
     def init():
         line.set_data([], [])
         return line,
-    anim = FuncAnimation(fig, animate, frames=carrier_freq, init_func=init, blit=True, save_count=len(carrier_freq))
+    plt.tight_layout()
+    anim = FuncAnimation(fig, animate, frames=carrier_freq, init_func=init, blit=True)
     anim.save(out_path, dpi=150, fps=fps)
 
 print('Generating sampling.mp4...')
 sampling('public/sampling.mp4')
-print('Generating am.mp4...')
-am('public/am.mp4')
+# print('Generating am.mp4...')
+# am('public/am.mp4')
