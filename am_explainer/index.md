@@ -148,7 +148,7 @@ plot_waterfall_spectrum(decimated, sr_aud, include_negative_frequencies=False, t
 
 ![Decimated Signal](gen/decimated.png)
 The spectrogram of the decimated signal shows the new frequency range of up to about 4 kHz, and you can also see the audio data. With just these two steps we are actually quite close to the desired audio, as you can start to hear below, but there's clearly something wrong.
-<audio controls src="decimated.wav"></audio>
+<audio controls src="gen/decimated.wav"></audio>
 You might be able to guess what the problem is from the spectrogram of the decimated signal, but recall that AM signal is comprised on a carrier wave modulated by the audio signal. That carrier wave is still present, visible as the bright continuous line around 200 Hz on the spectrogram, which is why the audio sounds distorted.
 
 ### Demodulation

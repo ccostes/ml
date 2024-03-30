@@ -126,7 +126,7 @@ def plot_waterfall_spectrum(signal, sample_rate, window_size=1024, hop_size=512,
         fft = np.fft.fft(segment, window_size)
         if include_negative_frequencies:
             fft_shifted = np.fft.fftshift(fft)
-            waterfall[:, i] = 20 * np.log10(np.abs(fft_shifted) + 1e-9)
+            waterfall[:, i] = 20 * np.log10(np.abs(fft_shifted))
             freqs = np.fft.fftshift(np.fft.fftfreq(window_size, 1 / sample_rate))
         else:
             # Use only the first half of FFT results for positive frequencies
@@ -138,7 +138,7 @@ def plot_waterfall_spectrum(signal, sample_rate, window_size=1024, hop_size=512,
         extent = (segment_times[0], segment_times[-1], freqs[0], freqs[-1])
     else:
         extent = (segment_times[0], segment_times[-1], 0, freqs[-1])
-    mappable = plt.imshow(waterfall, extent=extent, aspect='auto', cmap='viridis', origin='lower')
+    mappable = plt.imshow(waterfall, extent=extent, aspect='auto', cmap='viridis', origin='lower', vmin=-50, vmax=50)
     colorbar = plt.colorbar(label='Magnitude (dB)')
     plt.xlabel('Time (s)')
     plt.ylabel('Frequency (Hz)')

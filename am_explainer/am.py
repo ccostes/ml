@@ -4,6 +4,8 @@
 # title: "ML In Practice Part 1: AM Radio"
 # maintitle: "ML In Practice"
 # subtitle: "Part 1: AM Radio"
+# images: ['static/cover.webp']
+# description: "Begin the journey to build an ML model for enhanced AM radio reception with a crash course on AM radio fundamentals."
 # repo: https://github.com/ccostes/ml/tree/main/am_explainer
 # jupyter:
 #   jupytext:
