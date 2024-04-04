@@ -2,7 +2,7 @@
 
 This repo contains the code to generate this **[Blog Post](https://www.ccostes.com/posts/ml/am_explainer)**.
 <a href="https://www.ccostes.com/posts/ml/am_explainer"><img src="static/blogpost.jpg" /></a>
-The Jupyter notebook is stored as a `.py` file using jupytext for better version-control-ability.
+The notebook source is stored as a `.py` file using jupytext for better version-control-ability, with the resulting `.ipynb` file stored for convenience.
 
 ## Build
 Create a python environment and install the requisite dependencies:
@@ -13,7 +13,9 @@ pip install -r requirements.txt
 ```
 
 ### Create `.ipynb` Notebook
-If you want to explore and run the code as a notebook, you can generate a traditional python notebook file with `jupytext --to notebook am.py`. If you've created a `.ipynb` notebook and want to updated it from the `.py` file you can use the `--update` flag to prevent overwriting any existing cell outputs.
+To generate the notebook file with cell outputs run `jupytext --execute --to notebook am.py` (leave off `--execute` to skip running all of the cells). 
+
+If you've modified the `.py` file and want to update the `.ipynb` notebook, you can use the `--update` flag to prevent overwriting any existing cell outputs `jupytext --update --to notebook am.py`.
 
 If you want to update the .py file with changes from the notebook, use `jupytext --to py:percent am.ipynb`
 

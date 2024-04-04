@@ -1,11 +1,9 @@
 ---
 date: 2024-03-26
 draft: false
-title: "ML In Practice Part 1: AM Radio"
-maintitle: "ML In Practice"
-subtitle: "Part 1: AM Radio"
+title: "AM Demodulation Illustrated"
 images: ['static/cover.webp']
-description: "Begin the journey to build an ML model for enhanced AM radio reception with a crash course on AM radio fundamentals."
+description: "An illustrated guide to how AM radio works, and how to turn it into audio with software."
 repo: https://github.com/ccostes/ml/tree/main/am_explainer
 jupyter:
   jupytext:
@@ -19,29 +17,14 @@ jupyter:
     language: python
     name: python3
 ---
-Would you guess that it's possible to build a program that turns AM radio into audio and reduces noise, without actually knowing how radio or noise reduction works? It turns out you can; I know because I did it! (you can probably guess how based on the title)
+Picture this: you're sitting at your computer, and with a few keystrokes, you're eavesdropping on a pilot chatting with air traffic control. No, you haven't broken any laws (I hope). You've just used a software-defined radio (SDR) to capture a real-world AM transmission, and now you're ready to demodulate it and hear what's being said.
 
-Okay I lied a bit: I do know a thing or two about radio, but the results still impressed me! You can see that the audio (lower half of the plot below) is much stronger (brighter) and more distinct in the model output, and can hear the difference below.
-![Noise Comparison](static/comparison.png)
-<!--more-->
-**Standard Processing:**
-<audio controls src="static/0dB_standard.wav"></audio>
-**Model Output:**
-<audio controls src="static/0dB_model.wav"></audio>
-In this series of articles, I'll take you through the process of how I achieved these results, from understanding the fundamentals of AM radio to designing and training a machine learning model.
+In this article, I'll show the process of AM demodulation with software-defined radio, from the raw radio signal to audible speech, with animations and code for each step along the way. You can also download this as a Jupyter notebook to follow along and experiment with the demodulation process yourself from the [GitHub Repo](https://github.com/ccostes/ml/tree/main/am_explainer).
 
-Part one (you are here) is a quick primer on AM radio and how these signals are traditionally processed. In the next part, we will design a model architecture and generate synthetic training data. Finally, the third installment will cover model training and analyze how the results change depending on our choices.
-
-AM is one of the oldest radio technologies, while still being widely used for aviation and maritime communication. However, the point of this series isn't actually about making a better radio. Rather, the goal is to show my process of applying machine learning to a real-world problem from start to finish (though I hope you find the radio concepts as interesting as I do).
-
-Disclaimer: I am not an expert. This is the way I figured out how to do it, but there could certainly be better ways of doing things (and if you know of any I'd love to hear about them). 
-
-Not legal advice. Check with your doctor if machine learning is right for you.
+The process itself is actually quite simple, but involves some really cool signal processing concepts that will give you a taste of the fascinating world of SDR.
 
 
-
-## AM Radio Primer
-> *If you don't understand the problem you're trying to apply machine learning to, you're gonna have a bad time.*
+## AM Radio
 
 Amplitude Modulation (AM) is the simplest way to transmit audio signals via radio. You might wonder why we don't just transmit the audio signals directly, but this is undesirable for a variety of reasons (your antenna would need to hundreds of kilometers long, for one). Higher frequencies are generally easier to transmit, so the next simplest thing is to combine the audio signal with a higher frequency sine wave "carrier", transmit that signal, and then remove the carrier on the receiving end.
 ```
@@ -56,7 +39,7 @@ The animation below shows what this looks like as the carrier frequency increase
 
 ## Software-Defined Radio
 An important detail is how we will receive the signals we wish to process. Traditionally, radios could only be implemented with analog electronics, but with modern processing power we can replace a lot of that signal-specific circuitry with software; this is called *Software-Defined Radio (SDR)*. This allows us to receive a wide variety of signals, from  satellite weather imagery to TV broadcasts, with the a single hardware device. Processing the signal in software is a lot more flexible, and enables entirely new capabilities (like using a machine learning model).
-
+![USB SDR Receiver](static/rtlsdr.png)
 SDR receivers capture a "window" of frequencies, and we can tune this window so that it includes the frequency we are interested in. This also means that we can receive multiple signals simultaneously if they fall within that window, e.g. simultaneously listening to multiple radio stations; neat!
 
 ## AM Demodulation
