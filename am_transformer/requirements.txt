@@ -1,0 +1,13 @@
+auraloss
+jupyter
+jupytext
+librosa
+matplotlib
+numpy
+pystoi
+qbstyles
+reformer-pytorch
+requests
+scipy
+torch
+tqdm
