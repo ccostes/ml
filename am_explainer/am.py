@@ -2,7 +2,7 @@
 # date: 2024-03-26
 # draft: false
 # title: "AM Demodulation Illustrated"
-# images: ['static/cover.webp']
+# image: 'static/cover.webp'
 # description: "An illustrated guide to how AM radio works, and how to turn it into audio with software."
 # repo: https://github.com/ccostes/ml/tree/main/am_explainer
 # jupyter:
@@ -170,6 +170,11 @@ plot_waterfall_spectrum(filtered, sr_aud, include_negative_frequencies=False, ti
 #
 # <audio controls src="gen/demodulated.wav"></audio>
 # ![Demodulated Signal Waveform](gen/demodulated_waveform.png)
-# You've now seen all of the steps required to demodulate an AM radio signal, and hopefully have an intuition for what is happening in each.
+# You've now seen all of the steps required to demodulate an AM radio signal, and hopefully have an intuition for what is happening in each. To recap, they are:
+# 1. Shift to Baseband
+# 2. Filter
+# 3. Downsample
+# 4. Demodulate
+# 5. Filter
 #
-# The next installment will introduce machine learning, designing a model architecture for this problem, and devising a plan for creating synthetic training data. Stay tuned!
+# The [next post](/posts/2024-04-07-sdr_ml) will apply machine learning to this problem, not only demodulating the signal, but reducing noise and enhancing the audio at the same time; stay tuned!
